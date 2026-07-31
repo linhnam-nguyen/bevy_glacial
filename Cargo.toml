@@ -7,7 +7,7 @@ license = "MIT"
 repository = "https://github.com/bresilla/bevy_glacial"
 
 [dependencies]
-bevy = { version = "0.18", default-features = false, features = [
+bevy = { version = "0.19", default-features = false, features = [
     "std",
     "async_executor",
     "multi_threaded",
@@ -27,7 +27,6 @@ bevy = { version = "0.18", default-features = false, features = [
     "bevy_gizmos",
     "bevy_gizmos_render",
     "bevy_picking",
-    "bevy_scene",
     "default_font",
     "tonemapping_luts",
     "smaa_luts",
@@ -39,18 +38,18 @@ bevy = { version = "0.18", default-features = false, features = [
 ] }
 # Enable `mint` on bevy_math so bevy::math::DVec3 (and friends) gets the
 # `From<mint::Vector3<f64>>` impl that the inlined gizmo adapter needs.
-bevy_math = { version = "0.18", default-features = false, features = ["mint"] }
+bevy_math = { version = "0.19", default-features = false, features = ["mint"] }
 
 # Direct deps for the inlined transform-gizmo source under `src/gizmo/`.
 # Versions match the upstream `transform-gizmo` 0.9.0 and
 # `transform-gizmo-bevy` 0.9.0 manifests (vendored 2026-04-25).
 ahash = "0.8"
-bytemuck = "1.23"
-ecolor = "0.34"
-emath = "0.34"
+bytemuck = "1.25"
+ecolor = "0.35"
+emath = "0.35"
 enum_dispatch = "0.3"
 enumset = "1.1"
-epaint = "0.34"
+epaint = "0.35"
 glam = { version = "0.32", features = ["mint"] }
 mint = "0.5"
 uuid = "1.17"

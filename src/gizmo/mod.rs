@@ -557,14 +557,12 @@ fn draw_gizmos(
     for (gizmo_uuid, gizmo) in &gizmo_storage.gizmos {
         let draw_data = gizmo.draw();
 
-        let mut bevy_draw_data = render::GizmoDrawData::default();
-
-        let (asset, is_new_asset) = if let Some(handle) = draw_data_handles.handles.get(gizmo_uuid)
-        {
-            (draw_data_assets.get_mut(handle).unwrap(), false)
-        } else {
-            (&mut bevy_draw_data, true)
-        };
+        let handle = draw_data_handles
+            .handles
+            .entry(*gizmo_uuid)
+            .or_insert_with(|| draw_data_assets.add(render::GizmoDrawData::default()).into())
+            .clone();
+        let mut asset = draw_data_assets.get_mut(&handle).unwrap();
 
         let viewport = &gizmo.config().viewport;
 
@@ -582,13 +580,6 @@ fn draw_gizmos(
         asset.0.colors = draw_data.colors;
         asset.0.indices = draw_data.indices;
 
-        if is_new_asset {
-            let asset = draw_data_assets.add(bevy_draw_data);
-
-            draw_data_handles
-                .handles
-                .insert(*gizmo_uuid, asset.clone().into());
-        }
     }
 }
 

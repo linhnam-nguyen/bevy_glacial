@@ -269,7 +269,7 @@ pub fn build_grid_meshes(
         } else {
             Visibility::Hidden
         };
-        if let Some(m) = materials.get_mut(&grid.material) {
+        if let Some(mut m) = materials.get_mut(&grid.material) {
             let srgba = cfg.color.to_srgba();
             m.base_color = Color::srgba(srgba.red, srgba.green, srgba.blue, a);
         }
@@ -290,7 +290,7 @@ pub fn update_grid_alpha(
         let step = LEVEL_STEPS[grid.level as usize];
         let half = LEVEL_HALF[grid.level as usize];
         let is_top = grid.level as usize + 1 == LEVEL_STEPS.len();
-        if let Some(m) = meshes.get_mut(&mesh_h.0) {
+        if let Some(mut m) = meshes.get_mut(&mesh_h.0) {
             *m = match grid.kind {
                 GridKind::Lines => build_level_mesh(&cfg, step, half, is_top),
                 GridKind::Dots => build_dots_mesh(&cfg, step, half, is_top),

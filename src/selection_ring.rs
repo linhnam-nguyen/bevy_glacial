@@ -218,7 +218,7 @@ fn update_selection_ring(
     // Rebuild the mesh only when outer / thickness actually change.
     let key = (outer, thickness);
     if (ring.built_for.0 - key.0).abs() > 1e-3 || (ring.built_for.1 - key.1).abs() > 1e-3 {
-        if let Some(m) = meshes.get_mut(&ring.mesh) {
+        if let Some(mut m) = meshes.get_mut(&ring.mesh) {
             *m = make_ring_mesh(outer, thickness);
         }
         ring.built_for = key;
@@ -229,7 +229,7 @@ fn update_selection_ring(
     tr.rotation = Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2);
     tr.scale = Vec3::ONE;
 
-    if let Some(mat) = materials.get_mut(&ring.material) {
+    if let Some(mut mat) = materials.get_mut(&ring.material) {
         let linear = target.color.to_linear();
         mat.extension.color_r = linear.red;
         mat.extension.color_g = linear.green;
