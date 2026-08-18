@@ -2,12 +2,12 @@ use glam::DVec3;
 
 use super::super::math::{Pos2, round_to_interval, world_to_screen};
 
+use super::super::{GizmoDirection, GizmoDrawData, GizmoMode, GizmoResult, gizmo::Ray};
 use super::common::{
     draw_arrow, draw_circle, draw_plane, gizmo_color, gizmo_local_normal, outer_circle_radius,
     pick_arrow, pick_circle, pick_plane, plane_bitangent, plane_tangent,
 };
 use super::{SubGizmoConfig, SubGizmoKind, common::TransformKind};
-use super::super::{GizmoDirection, GizmoDrawData, GizmoMode, GizmoResult, gizmo::Ray};
 
 use super::common::PickResult;
 

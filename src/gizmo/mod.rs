@@ -34,12 +34,13 @@ use picking::TransformGizmoPickingPlugin;
 use render::{DrawDataHandles, TransformGizmoRenderPlugin};
 
 use core::config::{
-    GizmoModeKind, TransformPivotPoint, DEFAULT_SNAP_ANGLE, DEFAULT_SNAP_DISTANCE,
-    DEFAULT_SNAP_SCALE,
+    DEFAULT_SNAP_ANGLE, DEFAULT_SNAP_DISTANCE, DEFAULT_SNAP_SCALE, GizmoModeKind,
+    TransformPivotPoint,
 };
 pub use core::{
+    GizmoConfig,
     math::{Pos2, Rect},
-    GizmoConfig, *,
+    *,
 };
 
 pub mod core;
@@ -560,7 +561,11 @@ fn draw_gizmos(
         let handle = draw_data_handles
             .handles
             .entry(*gizmo_uuid)
-            .or_insert_with(|| draw_data_assets.add(render::GizmoDrawData::default()).into())
+            .or_insert_with(|| {
+                draw_data_assets
+                    .add(render::GizmoDrawData::default())
+                    .into()
+            })
             .clone();
         let mut asset = draw_data_assets.get_mut(&handle).unwrap();
 
@@ -579,7 +584,6 @@ fn draw_gizmos(
 
         asset.0.colors = draw_data.colors;
         asset.0.indices = draw_data.indices;
-
     }
 }
 
@@ -644,12 +648,7 @@ pub fn auto_scale_gizmo_to_target(
     let mut max_screen_radius: f32 = 0.0;
     for (target_gt, aabb) in &targets {
         let world_radius = aabb
-            .map(|a| {
-                a.half_extents
-                    .x
-                    .max(a.half_extents.y)
-                    .max(a.half_extents.z) as f32
-            })
+            .map(|a| a.half_extents.x.max(a.half_extents.y).max(a.half_extents.z) as f32)
             .unwrap_or(settings.fallback_world_radius);
 
         let distance = (cam_gt.translation() - target_gt.translation())
@@ -673,8 +672,8 @@ pub fn auto_scale_gizmo_to_target(
         return;
     }
 
-    options.visuals.gizmo_size =
-        (max_screen_radius * settings.object_fraction).clamp(settings.min_pixels, settings.max_pixels);
+    options.visuals.gizmo_size = (max_screen_radius * settings.object_fraction)
+        .clamp(settings.min_pixels, settings.max_pixels);
 }
 
 fn cleanup_old_data(

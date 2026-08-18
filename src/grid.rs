@@ -31,6 +31,13 @@ pub struct GroundGrid {
     pub visible: bool,
     /// Base RGB + alpha. Alpha scales everything.
     pub color: Color,
+    /// World-space height of the loaded scene's ground reference. `None`
+    /// keeps the grid hidden until the host application has a scene bound.
+    pub ground_y: Option<f32>,
+    /// Desired outer coverage radius for the coarsest level. The host can
+    /// raise this for large imported stages; the coarsest level is scaled
+    /// without changing the finer local LOD levels.
+    pub coverage_radius: f32,
 }
 
 impl Default for GroundGrid {
@@ -42,6 +49,8 @@ impl Default for GroundGrid {
             // colours; the major-line × 3.5 boost still fits
             // inside the alpha cap.
             color: Color::srgba(0.62, 0.76, 0.95, 0.6),
+            ground_y: None,
+            coverage_radius: LEVEL_HALF[LEVEL_HALF.len() - 1],
         }
     }
 }
@@ -90,9 +99,6 @@ const MAJOR_BOOST: f32 = 3.5;
 /// far horizon transparent so grid lines don't pile up at the
 /// vanishing point.
 const EDGE_FADE_FRAC: f32 = 0.92;
-/// Grid rides this height above the tangent plane.
-const GRID_Y: f32 = 0.05;
-
 /// Peak fade at `log10(cam_dist / step) ≈ GAUSS_PEAK`. Set so a
 /// level peaks when the camera is [`LEVEL_SCALE`]× its cell size
 /// away — i.e. when the cells look like a comfortable fraction of
@@ -135,10 +141,9 @@ const DOT_RADIUS_FRAC: f32 = 0.024;
 /// a circle at the size we draw them and keeps the vertex count
 /// down — there's a dot at every minor intersection.
 const DOT_SEGMENTS: u32 = 8;
-/// Tiny Y offsets so dots paint on top of lines without z-fighting.
-const LINES_Y: f32 = GRID_Y;
-const DOTS_Y: f32 = GRID_Y + 0.002;
-
+/// Relative Y offset so dots paint on top of lines without introducing a
+/// fixed absolute gap for very small imported scenes.
+const DOT_OFFSET_FRAC: f32 = 0.0001;
 
 // ── Plugin ──────────────────────────────────────────────────────────
 
@@ -146,8 +151,9 @@ const DOTS_Y: f32 = GRID_Y + 0.002;
 /// meshes at Startup, and runs the per-frame follow / fade systems.
 ///
 /// The grid does not need a ground plane to render against — it sits
-/// on the y = 0 plane and is fully self-contained. If the host app
-/// doesn't want a ground at all, just don't spawn one.
+/// on the host-provided `GroundGrid::ground_y` plane and is fully
+/// self-contained. The grid remains hidden until the host binds a loaded
+/// scene ground reference.
 pub struct GroundGridPlugin;
 
 impl Plugin for GroundGridPlugin {
@@ -203,7 +209,7 @@ pub fn spawn_circle_meshes(
                 kind: GridKind::Lines,
                 material: lines_mat.clone(),
             },
-            Transform::from_xyz(0.0, LINES_Y, 0.0),
+            Transform::default(),
             Mesh3d(lines_mesh),
             MeshMaterial3d(lines_mat),
             NotShadowCaster,
@@ -221,7 +227,7 @@ pub fn spawn_circle_meshes(
                 kind: GridKind::Dots,
                 material: dots_mat.clone(),
             },
-            Transform::from_xyz(0.0, DOTS_Y, 0.0),
+            Transform::default(),
             Mesh3d(dots_mesh),
             MeshMaterial3d(dots_mat),
             NotShadowCaster,
@@ -247,17 +253,30 @@ pub fn build_grid_meshes(
     let cam_dist = cam.distance.max(0.1);
 
     for (grid, mut tr, mut vis) in grids.iter_mut() {
-        let step = LEVEL_STEPS[grid.level as usize];
+        let Some(ground_y) = cfg.ground_y else {
+            *vis = Visibility::Hidden;
+            continue;
+        };
+
+        let level = grid.level as usize;
+        let is_coarsest = level + 1 == LEVEL_STEPS.len();
+        let level_scale = if is_coarsest {
+            (cfg.coverage_radius.max(LEVEL_HALF[level]) / LEVEL_HALF[level]).max(1.0)
+        } else {
+            1.0
+        };
+        let step = LEVEL_STEPS[level] * level_scale;
         // Snap to the *major* step so the mesh translates as a
         // rigid sheet — both lines and dots sit at the same world
         // positions every frame.
         let snap_step = step * MAJOR_EVERY as f32;
         tr.translation.x = (cam.focus.x / snap_step).round() * snap_step;
         tr.translation.y = match grid.kind {
-            GridKind::Lines => LINES_Y,
-            GridKind::Dots => DOTS_Y,
+            GridKind::Lines => ground_y,
+            GridKind::Dots => ground_y + step * DOT_OFFSET_FRAC,
         };
         tr.translation.z = (cam.focus.z / snap_step).round() * snap_step;
+        tr.scale = Vec3::new(level_scale, 1.0, level_scale);
 
         let fade = match grid.kind {
             GridKind::Lines => level_fade(cam_dist, step, LINE_CLOSE_FALLOFF),

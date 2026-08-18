@@ -55,7 +55,11 @@ pub fn draw_revolute_limit_arc<C: GizmoConfigGroup>(
     }
     // Build an isometry whose local +Z = axis (arc plane normal),
     // local +X = reference perpendicular rotated by lower_rad.
-    let perp_seed = if z.abs().dot(Vec3::Y) < 0.9 { Vec3::Y } else { Vec3::X };
+    let perp_seed = if z.abs().dot(Vec3::Y) < 0.9 {
+        Vec3::Y
+    } else {
+        Vec3::X
+    };
     let perp = (perp_seed - z * perp_seed.dot(z)).normalize();
     let x = Quat::from_axis_angle(z, lower_rad) * perp;
     let y = z.cross(x).normalize();
@@ -95,7 +99,11 @@ pub fn draw_prismatic_limit_segment<C: GizmoConfigGroup>(
     gizmos.line(p_low, p_high, col);
 
     // End ticks (perpendicular cross 1/8th the segment length).
-    let perp_seed = if dir.abs().dot(Vec3::Y) < 0.9 { Vec3::Y } else { Vec3::X };
+    let perp_seed = if dir.abs().dot(Vec3::Y) < 0.9 {
+        Vec3::Y
+    } else {
+        Vec3::X
+    };
     let perp = (perp_seed - dir * perp_seed.dot(dir)).normalize();
     let perp2 = dir.cross(perp).normalize();
     let tick = (high_m - low_m).abs() * 0.08;
@@ -135,7 +143,11 @@ pub fn draw_cone_wireframe<C: GizmoConfigGroup>(
     let base_radius = height * half_angle_rad.tan();
 
     // Local frame for the base circle (perpendicular to axis).
-    let perp_seed = if dir.abs().dot(Vec3::Y) < 0.9 { Vec3::Y } else { Vec3::X };
+    let perp_seed = if dir.abs().dot(Vec3::Y) < 0.9 {
+        Vec3::Y
+    } else {
+        Vec3::X
+    };
     let x = (perp_seed - dir * perp_seed.dot(dir)).normalize();
     let y = dir.cross(x).normalize();
 
@@ -170,9 +182,17 @@ pub fn draw_distance_envelope<C: GizmoConfigGroup>(
     color_max: impl Into<Color>,
 ) {
     if min_m > 0.0 {
-        gizmos.sphere(Isometry3d::from_translation(centre), min_m, color_min.into());
+        gizmos.sphere(
+            Isometry3d::from_translation(centre),
+            min_m,
+            color_min.into(),
+        );
     }
     if max_m > 0.0 {
-        gizmos.sphere(Isometry3d::from_translation(centre), max_m, color_max.into());
+        gizmos.sphere(
+            Isometry3d::from_translation(centre),
+            max_m,
+            color_max.into(),
+        );
     }
 }

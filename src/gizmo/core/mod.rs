@@ -21,5 +21,5 @@ pub use gizmo::{Gizmo, GizmoDrawData, GizmoInteraction, GizmoResult};
 
 pub use ecolor::Color32;
 pub use emath::Rect;
-pub use enumset::{enum_set, EnumSet};
+pub use enumset::{EnumSet, enum_set};
 pub use mint;

@@ -1,11 +1,13 @@
 use super::super::math::{DVec3, intersect_plane, ray_to_ray, round_to_interval};
 
+use super::super::{
+    GizmoDirection, GizmoDrawData, GizmoMode, GizmoOrientation, GizmoResult, gizmo::Ray,
+};
 use super::common::{
     draw_arrow, draw_circle, draw_plane, gizmo_color, gizmo_normal, inner_circle_radius,
     pick_arrow, pick_circle, pick_plane, plane_bitangent, plane_global_origin, plane_tangent,
 };
 use super::{SubGizmoConfig, SubGizmoKind, common::TransformKind};
-use super::super::{GizmoDirection, GizmoDrawData, GizmoMode, GizmoOrientation, GizmoResult, gizmo::Ray};
 
 use super::common::PickResult;
 

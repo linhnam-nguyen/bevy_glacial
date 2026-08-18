@@ -11,7 +11,7 @@
 //! Mesh is rebuilt only when `outer_radius` or `thickness` change
 //! (per-frame mutation of `SelectionRing.color`/`anchor` is free).
 
-use bevy::asset::{embedded_asset, Asset};
+use bevy::asset::{Asset, embedded_asset};
 use bevy::light::NotShadowCaster;
 use bevy::pbr::{ExtendedMaterial, MaterialExtension, MaterialPlugin};
 use bevy::prelude::*;
@@ -196,7 +196,9 @@ fn update_selection_ring(
     mut materials: ResMut<Assets<SelectionRingMaterial>>,
     mut q: Query<(&mut SelectionRingEntity, &mut Transform, &mut Visibility)>,
 ) {
-    let Ok((mut ring, mut tr, mut vis)) = q.single_mut() else { return };
+    let Ok((mut ring, mut tr, mut vis)) = q.single_mut() else {
+        return;
+    };
 
     let Some(anchor) = target.anchor else {
         *vis = Visibility::Hidden;

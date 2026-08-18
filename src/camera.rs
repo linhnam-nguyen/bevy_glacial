@@ -101,7 +101,10 @@ pub fn chase_camera_control(
         *orbit_anchor = None;
     }
 
-    let cursor_position = primary_window.single().ok().and_then(|w| w.cursor_position());
+    let cursor_position = primary_window
+        .single()
+        .ok()
+        .and_then(|w| w.cursor_position());
 
     // --- Pan: middle-click drag (XZ plane) ---
     let mut pan_delta = Vec2::ZERO;
@@ -210,7 +213,9 @@ pub fn chase_camera_zoom(
         };
     }
 
-    let Ok((mut cam, mut tr)) = cameras.single_mut() else { return };
+    let Ok((mut cam, mut tr)) = cameras.single_mut() else {
+        return;
+    };
 
     // Detect external writes to `cam.distance` between frames (e.g.
     // a host-side cinematic-fly system, a follow-rig pull-back). If

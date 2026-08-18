@@ -26,7 +26,7 @@
 
 use bevy::prelude::*;
 
-use crate::camera::{chase_camera_control, ChaseCamera};
+use crate::camera::{ChaseCamera, chase_camera_control};
 
 /// Make the camera entity track another entity's position.
 ///

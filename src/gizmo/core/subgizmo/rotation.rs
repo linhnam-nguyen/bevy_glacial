@@ -7,9 +7,9 @@ use super::super::math::{
     round_to_interval, world_to_screen,
 };
 use super::super::shape::ShapeBuilder;
+use super::super::{GizmoDirection, GizmoDrawData, GizmoResult, gizmo::Ray};
 use super::common::{gizmo_color, gizmo_local_normal, gizmo_normal, outer_circle_radius};
 use super::{SubGizmoConfig, SubGizmoKind};
-use super::super::{GizmoDirection, GizmoDrawData, GizmoResult, gizmo::Ray};
 
 use super::Picked;
 

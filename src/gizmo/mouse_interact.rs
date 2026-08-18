@@ -1,6 +1,6 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::ecs::{message::MessageWriter, system::Res};
-use bevy::input::{mouse::MouseButton, ButtonInput};
+use bevy::input::{ButtonInput, mouse::MouseButton};
 
 use super::{GizmoDragStarted, GizmoDragging};
 

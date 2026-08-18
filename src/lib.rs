@@ -77,21 +77,21 @@ pub mod selection_ring;
 pub mod window_settings;
 
 pub use axis_gizmo::{
-    draw_axis_gizmos, draw_axis_triad, draw_axis_triad_with_colors, AxisGizmo, AxisGizmoPlugin,
-    DEFAULT_AXIS_COLORS,
+    AxisGizmo, AxisGizmoPlugin, DEFAULT_AXIS_COLORS, draw_axis_gizmos, draw_axis_triad,
+    draw_axis_triad_with_colors,
+};
+pub use camera::{
+    ChaseCamera, ChaseCameraPlugin, apply_rig, chase_camera_control, chase_camera_zoom,
+    cursor_ray_to_ground,
+};
+pub use follow::{FollowCameraPlugin, FollowTarget, follow_camera_target};
+pub use grid::{
+    GridKind, GroundGrid, GroundGridPlugin, LEVEL_HALF, LEVEL_STEPS, LocalGrid, build_grid_meshes,
+    spawn_circle_meshes, update_grid_alpha,
 };
 pub use joint_gizmos::{
     draw_cone_wireframe, draw_distance_envelope, draw_prismatic_limit_segment,
     draw_revolute_limit_arc,
-};
-pub use camera::{
-    apply_rig, chase_camera_control, chase_camera_zoom, cursor_ray_to_ground, ChaseCamera,
-    ChaseCameraPlugin,
-};
-pub use follow::{follow_camera_target, FollowCameraPlugin, FollowTarget};
-pub use grid::{
-    build_grid_meshes, spawn_circle_meshes, update_grid_alpha, GridKind, GroundGrid,
-    GroundGridPlugin, LocalGrid, LEVEL_HALF, LEVEL_STEPS,
 };
 pub use selection_ring::{
     SelectionRing, SelectionRingEntity, SelectionRingExtension, SelectionRingMaterial,
@@ -100,8 +100,8 @@ pub use selection_ring::{
 pub use window_settings::{WindowGeometry, WindowSettingsPlugin};
 
 pub use gizmo::{
-    auto_scale_gizmo_to_target, EnumSet, GizmoAutoScale, GizmoCamera, GizmoHotkeys, GizmoMode,
-    GizmoOptions, GizmoOrientation, GizmoTarget, GizmoVisuals, TransformGizmoPlugin,
+    EnumSet, GizmoAutoScale, GizmoCamera, GizmoHotkeys, GizmoMode, GizmoOptions, GizmoOrientation,
+    GizmoTarget, GizmoVisuals, TransformGizmoPlugin, auto_scale_gizmo_to_target,
 };
 
 use bevy::app::{PluginGroup, PluginGroupBuilder};

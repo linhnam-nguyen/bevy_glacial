@@ -1,7 +1,7 @@
 use super::super::math::{DQuat, Pos2, screen_to_world};
+use super::super::{GizmoDrawData, GizmoResult, config::PreparedGizmoConfig, gizmo::Ray};
 use super::common::{draw_circle, pick_circle};
 use super::{SubGizmoConfig, SubGizmoKind};
-use super::super::{GizmoDrawData, GizmoResult, config::PreparedGizmoConfig, gizmo::Ray};
 use ecolor::Color32;
 
 use super::common::PickResult;
