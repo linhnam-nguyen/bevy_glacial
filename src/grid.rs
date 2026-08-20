@@ -154,11 +154,22 @@ const DOT_OFFSET_FRAC: f32 = 0.0001;
 /// on the host-provided `GroundGrid::ground_y` plane and is fully
 /// self-contained. The grid remains hidden until the host binds a loaded
 /// scene ground reference.
+/// Diagnostic observability counters for GroundGrid rebuild operations.
+#[derive(Resource, Debug, Clone, Copy, Default)]
+pub struct GlacialGridCounters {
+    pub alpha_rebuild_calls: u64,
+    pub lines_rebuilt: u64,
+    pub dots_rebuilt: u64,
+    pub vertices_generated: u64,
+    pub indices_generated: u64,
+}
+
 pub struct GroundGridPlugin;
 
 impl Plugin for GroundGridPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<GroundGrid>()
+            .init_resource::<GlacialGridCounters>()
             .add_systems(Startup, setup_ground_grid)
             .add_systems(Update, (build_grid_meshes, update_grid_alpha));
     }
@@ -301,19 +312,40 @@ pub fn update_grid_alpha(
     cfg: Res<GroundGrid>,
     mut meshes: ResMut<Assets<Mesh>>,
     grids: Query<(&LocalGrid, &Mesh3d)>,
+    mut counters: Option<ResMut<GlacialGridCounters>>,
 ) {
     if !cfg.is_changed() {
         return;
+    }
+    if let Some(ref mut c) = counters {
+        c.alpha_rebuild_calls += 1;
     }
     for (grid, mesh_h) in grids.iter() {
         let step = LEVEL_STEPS[grid.level as usize];
         let half = LEVEL_HALF[grid.level as usize];
         let is_top = grid.level as usize + 1 == LEVEL_STEPS.len();
+        let new_mesh = match grid.kind {
+            GridKind::Lines => {
+                if let Some(ref mut c) = counters {
+                    c.lines_rebuilt += 1;
+                }
+                build_level_mesh(&cfg, step, half, is_top)
+            }
+            GridKind::Dots => {
+                if let Some(ref mut c) = counters {
+                    c.dots_rebuilt += 1;
+                }
+                build_dots_mesh(&cfg, step, half, is_top)
+            }
+        };
+        if let Some(ref mut c) = counters {
+            c.vertices_generated += new_mesh.count_vertices() as u64;
+            if let Some(indices) = new_mesh.indices() {
+                c.indices_generated += indices.len() as u64;
+            }
+        }
         if let Some(mut m) = meshes.get_mut(&mesh_h.0) {
-            *m = match grid.kind {
-                GridKind::Lines => build_level_mesh(&cfg, step, half, is_top),
-                GridKind::Dots => build_dots_mesh(&cfg, step, half, is_top),
-            };
+            *m = new_mesh;
         }
     }
 }

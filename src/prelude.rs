@@ -21,8 +21,8 @@ pub use crate::{
     },
     follow::{FollowCameraPlugin, FollowTarget, follow_camera_target},
     grid::{
-        GridKind, GroundGrid, GroundGridPlugin, LEVEL_HALF, LEVEL_STEPS, LocalGrid,
-        build_grid_meshes, spawn_circle_meshes, update_grid_alpha,
+        GlacialGridCounters, GridKind, GroundGrid, GroundGridPlugin, LEVEL_HALF, LEVEL_STEPS,
+        LocalGrid, build_grid_meshes, spawn_circle_meshes, update_grid_alpha,
     },
     selection_ring::{
         SelectionRing, SelectionRingEntity, SelectionRingExtension, SelectionRingMaterial,
