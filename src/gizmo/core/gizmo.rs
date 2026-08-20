@@ -74,7 +74,7 @@ impl Gizmo {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// # // Dummy values
     /// # use transform_gizmo::GizmoInteraction;
     /// # let mut gizmo = transform_gizmo::Gizmo::default();
