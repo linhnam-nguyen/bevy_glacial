@@ -35,6 +35,12 @@ pub struct GlacialGridCounters {
     pub indices_generated: u64,
 }
 
+/// Last mesh-baked grid style successfully synchronized into the mesh assets.
+#[derive(Resource, Default)]
+pub struct GroundGridMeshStyle {
+    pub(crate) color: Option<Color>,
+}
+
 // ── LOD levels ──────────────────────────────────────────────────────
 
 pub const LEVEL_SCALE: f32 = 4.0;

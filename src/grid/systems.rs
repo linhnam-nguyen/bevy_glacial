@@ -65,8 +65,10 @@ pub(crate) fn setup_ground_grid(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     cfg: Res<GroundGrid>,
+    mut mesh_style: ResMut<GroundGridMeshStyle>,
 ) {
     spawn_circle_meshes(&mut commands, &mut meshes, &mut materials, &cfg);
+    mesh_style.color = Some(cfg.color);
 }
 
 pub fn build_grid_meshes(
@@ -123,13 +125,15 @@ pub fn update_grid_alpha(
     mut meshes: ResMut<Assets<Mesh>>,
     grids: Query<(&LocalGrid, &Mesh3d)>,
     mut counters: Option<ResMut<GlacialGridCounters>>,
+    mut mesh_style: ResMut<GroundGridMeshStyle>,
 ) {
-    if !cfg.is_changed() {
+    if mesh_style.color == Some(cfg.color) {
         return;
     }
     if let Some(ref mut c) = counters {
         c.alpha_rebuild_calls += 1;
     }
+    let mut all_meshes_updated = true;
     for (grid, mesh_h) in grids.iter() {
         let step = LEVEL_STEPS[grid.level as usize];
         let half = LEVEL_HALF[grid.level as usize];
@@ -156,6 +160,11 @@ pub fn update_grid_alpha(
         }
         if let Some(mut m) = meshes.get_mut(&mesh_h.0) {
             *m = new_mesh;
+        } else {
+            all_meshes_updated = false;
         }
+    }
+    if all_meshes_updated {
+        mesh_style.color = Some(cfg.color);
     }
 }
