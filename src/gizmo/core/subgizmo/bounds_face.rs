@@ -100,4 +100,34 @@ mod tests {
         assert_eq!(bounds_face_handle_size(&config), initial_size * 2.5);
         assert_eq!(initial_size, 1.2);
     }
+
+    #[test]
+    fn face_handle_baseline_resets_for_direct_fitted_bounds_changes() {
+        let mut config = PreparedGizmoConfig::default();
+        config.bounds_faces = true;
+
+        config.update_bounds_face_handle_generation(1);
+        config.update_for_targets(&[Transform::from_scale_rotation_translation(
+            DVec3::splat(100.0),
+            DQuat::IDENTITY,
+            DVec3::ZERO,
+        )]);
+        assert_eq!(bounds_face_handle_size(&config), 6.0);
+
+        config.update_bounds_face_handle_generation(2);
+        config.update_for_targets(&[Transform::from_scale_rotation_translation(
+            DVec3::splat(5.0),
+            DQuat::IDENTITY,
+            DVec3::ZERO,
+        )]);
+        assert_eq!(bounds_face_handle_size(&config), 0.3);
+
+        config.update_bounds_face_handle_generation(3);
+        config.update_for_targets(&[Transform::from_scale_rotation_translation(
+            DVec3::splat(100.0),
+            DQuat::IDENTITY,
+            DVec3::ZERO,
+        )]);
+        assert_eq!(bounds_face_handle_size(&config), 6.0);
+    }
 }

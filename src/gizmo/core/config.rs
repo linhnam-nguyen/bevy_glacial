@@ -144,6 +144,8 @@ pub(crate) struct PreparedGizmoConfig {
     /// it from `scale` every frame would make a face handle shrink with the
     /// face it is dragging.
     pub(crate) bounds_face_handle_base_size: Option<f64>,
+    /// Opaque host generation for the fitted bounds used by the baseline.
+    pub(crate) bounds_face_handle_generation: u64,
 }
 
 impl Deref for PreparedGizmoConfig {
@@ -186,6 +188,13 @@ impl PreparedGizmoConfig {
             rotation: self.rotation.into(),
             translation: self.translation.into(),
         });
+    }
+
+    pub(crate) fn update_bounds_face_handle_generation(&mut self, generation: u64) {
+        if self.bounds_face_handle_generation != generation {
+            self.bounds_face_handle_generation = generation;
+            self.bounds_face_handle_base_size = None;
+        }
     }
 
     pub(crate) fn update_for_targets(&mut self, targets: &[Transform]) {

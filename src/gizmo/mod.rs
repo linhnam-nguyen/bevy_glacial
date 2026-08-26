@@ -229,8 +229,29 @@ impl GizmoTarget {
 /// [`GizmoResult::ResizeFace`] and are not applied to the target's ordinary
 /// transform by the Bevy adapter; the host owns the bounds semantics. Other
 /// gizmo results continue to update the target transform normally.
+///
+/// `baseline_generation` is an opaque host-owned token. The host increments
+/// it when a new authoritative fitted-bounds context starts; Glacial uses the
+/// change to capture a new level-2 face-handle baseline while retaining that
+/// baseline through ordinary manipulation of the same target.
 #[derive(Component, Copy, Clone, Debug, Default)]
-pub struct BoundsGizmoTarget;
+pub struct BoundsGizmoTarget {
+    baseline_generation: u64,
+}
+
+impl BoundsGizmoTarget {
+    /// Creates a bounds target with an explicit fitted-bounds generation.
+    pub const fn new(baseline_generation: u64) -> Self {
+        Self {
+            baseline_generation,
+        }
+    }
+
+    /// Returns the host-owned fitted-bounds generation.
+    pub const fn baseline_generation(&self) -> u64 {
+        self.baseline_generation
+    }
+}
 
 /// Marker used to specify which camera to use for gizmos.
 #[derive(Component)]
@@ -483,12 +504,17 @@ fn update_gizmos(
     let mut target_entities: Vec<Entity> = vec![];
     let mut target_transforms: Vec<Transform> = vec![];
     let mut bounds_face_target_count = 0;
+    let mut bounds_face_handle_generation = None;
 
     for (entity, mut target_transform, mut gizmo_target, bounds_target) in &mut q_targets {
         target_entities.push(entity);
         target_transforms.push(*target_transform);
-        if bounds_target.is_some() {
+        if let Some(bounds_target) = bounds_target {
             bounds_face_target_count += 1;
+            bounds_face_handle_generation = merge_bounds_face_generations(
+                bounds_face_handle_generation,
+                bounds_target.baseline_generation(),
+            );
         }
 
         if gizmo_options.group_targets {
@@ -512,6 +538,9 @@ fn update_gizmos(
         let mut target_config = gizmo_config;
         target_config.bounds_faces = bounds_target.is_some();
         gizmo.update_config(target_config);
+        gizmo.update_bounds_face_handle_generation(
+            bounds_target.map_or(0, BoundsGizmoTarget::baseline_generation),
+        );
 
         let gizmo_result = gizmo.update(
             gizmo_interaction,
@@ -546,6 +575,9 @@ fn update_gizmos(
         let mut group_config = gizmo_config;
         group_config.bounds_faces = bounds_faces;
         gizmo.update_config(group_config);
+        gizmo.update_bounds_face_handle_generation(
+            bounds_face_handle_generation.unwrap_or_default(),
+        );
 
         let gizmo_result = gizmo.update(
             gizmo_interaction,
@@ -581,6 +613,14 @@ fn update_gizmos(
     }
 
     gizmo_storage.target_entities = target_entities;
+}
+
+fn merge_bounds_face_generations(current: Option<u64>, next: u64) -> Option<u64> {
+    Some(match current {
+        None => next,
+        Some(generation) if generation == next => generation,
+        Some(_) => u64::MAX,
+    })
 }
 
 fn draw_gizmos(

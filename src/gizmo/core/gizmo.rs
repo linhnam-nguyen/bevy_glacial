@@ -66,6 +66,10 @@ impl Gizmo {
         }
     }
 
+    pub(crate) fn update_bounds_face_handle_generation(&mut self, generation: u64) {
+        self.config.update_bounds_face_handle_generation(generation);
+    }
+
     /// Was this gizmo focused after the latest [`Gizmo::update`] call.
     pub fn is_focused(&self) -> bool {
         self.subgizmos.iter().any(|subgizmo| subgizmo.is_focused())
