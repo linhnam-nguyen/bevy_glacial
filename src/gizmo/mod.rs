@@ -705,9 +705,16 @@ pub fn auto_scale_gizmo_to_target(
         return;
     }
 
-    options.visuals.gizmo_size =
-        (max_screen_radius * settings.object_fraction * options.gizmo_size_scale.max(0.01))
-            .clamp(settings.min_pixels, settings.max_pixels);
+    options.visuals.gizmo_size = scaled_gizmo_size(
+        max_screen_radius * settings.object_fraction,
+        *settings,
+        options.gizmo_size_scale,
+    );
+}
+
+fn scaled_gizmo_size(raw_size: f32, settings: GizmoAutoScale, size_scale: f32) -> f32 {
+    let base_size = raw_size.clamp(settings.min_pixels, settings.max_pixels);
+    base_size * size_scale.max(0.01)
 }
 
 fn cleanup_old_data(
@@ -740,4 +747,29 @@ fn cleanup_old_data(
     draw_data_handles
         .handles
         .retain(|uuid, _| gizmos_to_keep.contains(uuid));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{GizmoAutoScale, scaled_gizmo_size};
+
+    #[test]
+    fn gizmo_size_scale_is_applied_after_auto_size_clamp() {
+        let settings = GizmoAutoScale::default();
+        let baseline = scaled_gizmo_size(80.0, settings, 1.0);
+
+        assert_eq!(baseline, 80.0);
+        assert!((scaled_gizmo_size(80.0, settings, 10.0) - baseline * 10.0).abs() < 1e-5);
+        assert!(
+            (scaled_gizmo_size(80.0, settings, 10.0_f32.sqrt()) - baseline * 10.0_f32.sqrt()).abs()
+                < 1e-5
+        );
+
+        let clamped_baseline = scaled_gizmo_size(400.0, settings, 1.0);
+        assert_eq!(clamped_baseline, settings.max_pixels);
+        assert_eq!(
+            scaled_gizmo_size(400.0, settings, 10.0),
+            clamped_baseline * 10.0
+        );
+    }
 }

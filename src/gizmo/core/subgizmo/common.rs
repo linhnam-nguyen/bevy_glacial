@@ -257,11 +257,15 @@ fn bounds_face_basis(face: BoundsFace) -> (DVec3, DVec3) {
 ///
 /// Face handles intentionally do not use `scale_factor`: that value is
 /// projection-dependent and makes the handle's world dimensions change as
-/// the camera/view relationship changes. A small fraction of the box's
-/// narrowest local dimension keeps the handle usable while preserving a
-/// stable 3D size as the box rotates.
+/// the camera/view relationship changes. The baseline is captured from the
+/// fitted bounds and retained while the bounds transform changes. A small
+/// fraction of the box's narrowest local dimension keeps the handle usable
+/// without making it shrink during a face drag.
 pub(crate) fn bounds_face_handle_size(config: &PreparedGizmoConfig) -> f64 {
-    config.scale.abs().min_element() * 0.06 * config.gizmo_size_scale.max(0.01) as f64
+    let base_size = config
+        .bounds_face_handle_base_size
+        .unwrap_or_else(|| config.scale.abs().min_element() * 0.06);
+    base_size * config.gizmo_size_scale.max(0.01) as f64
 }
 
 fn face_direction(face: BoundsFace) -> GizmoDirection {

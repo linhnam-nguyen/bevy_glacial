@@ -137,6 +137,13 @@ pub(crate) struct PreparedGizmoConfig {
     pub(crate) left_handed: bool,
     /// Direction from the camera to the gizmo in world space
     pub(crate) eye_to_model_dir: DVec3,
+    /// Baseline world-space size for bounds-face handles.
+    ///
+    /// This is captured from the fitted bounds once and then retained while
+    /// the bounds transform is resized, translated, or rotated. Recomputing
+    /// it from `scale` every frame would make a face handle shrink with the
+    /// face it is dragging.
+    pub(crate) bounds_face_handle_base_size: Option<f64>,
 }
 
 impl Deref for PreparedGizmoConfig {
@@ -155,6 +162,10 @@ impl DerefMut for PreparedGizmoConfig {
 
 impl PreparedGizmoConfig {
     pub(crate) fn update_for_config(&mut self, config: GizmoConfig) {
+        if !config.bounds_faces {
+            self.bounds_face_handle_base_size = None;
+        }
+
         let projection_matrix = DMat4::from(config.projection_matrix);
         let view_matrix = DMat4::from(config.view_matrix);
 
@@ -203,6 +214,10 @@ impl PreparedGizmoConfig {
             rotation: rotation.into(),
             translation: translation.into(),
         });
+
+        if self.bounds_faces && self.bounds_face_handle_base_size.is_none() {
+            self.bounds_face_handle_base_size = Some(self.scale.abs().min_element() * 0.06);
+        }
     }
 
     pub(crate) fn update_transform(&mut self, transform: Transform) {
