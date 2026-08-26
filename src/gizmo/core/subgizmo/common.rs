@@ -262,9 +262,7 @@ fn bounds_face_basis(face: BoundsFace) -> (DVec3, DVec3) {
 /// fraction of the box's narrowest local dimension keeps the handle usable
 /// without making it shrink during a face drag.
 pub(crate) fn bounds_face_handle_size(config: &PreparedGizmoConfig) -> f64 {
-    let base_size = config
-        .bounds_face_handle_base_size
-        .unwrap_or_else(|| config.scale.abs().min_element() * 0.06);
+    let base_size = config.bounds_face_handle_base_size.unwrap_or_default();
     base_size * config.gizmo_size_scale.max(0.01) as f64
 }
 
