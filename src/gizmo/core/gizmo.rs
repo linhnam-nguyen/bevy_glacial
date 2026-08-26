@@ -4,6 +4,7 @@ use enumset::EnumSet;
 use std::ops::{Add, AddAssign, Sub};
 
 use super::GizmoOrientation;
+use super::bounds::{BoundsFace, resize_transform_face};
 use super::config::{
     GizmoConfig, GizmoDirection, GizmoMode, PreparedGizmoConfig, TransformPivotPoint,
 };
@@ -15,8 +16,8 @@ use super::subgizmo::rotation::RotationParams;
 use super::subgizmo::scale::ScaleParams;
 use super::subgizmo::translation::TranslationParams;
 use super::subgizmo::{
-    ArcballSubGizmo, RotationSubGizmo, ScaleSubGizmo, SubGizmo, SubGizmoControl,
-    TranslationSubGizmo, common::TransformKind,
+    ArcballSubGizmo, BoundsFaceParams, BoundsFaceSubGizmo, RotationSubGizmo, ScaleSubGizmo,
+    SubGizmo, SubGizmoControl, TranslationSubGizmo, common::TransformKind,
 };
 
 /// A 3D transformation gizmo.
@@ -234,6 +235,12 @@ impl Gizmo {
                 GizmoResult::Scale { total } => {
                     self.update_scale(transform, start_transform, total)
                 }
+                GizmoResult::ResizeFace { face, delta } => resize_transform_face(
+                    *start_transform,
+                    face,
+                    delta,
+                    self.config.bounds_min_thickness,
+                ),
                 GizmoResult::Arcball { delta, total: _ } => {
                     self.update_rotation_quat(transform, delta.into())
                 }
@@ -526,6 +533,17 @@ impl Gizmo {
     fn add_scale(&mut self) {
         let modes = self.enabled_modes();
 
+        if self.config.bounds_faces {
+            if modes.iter().any(|mode| mode.is_scale()) {
+                for face in BoundsFace::ALL {
+                    self.subgizmos.push(
+                        BoundsFaceSubGizmo::new(self.config, BoundsFaceParams { face }).into(),
+                    );
+                }
+            }
+            return;
+        }
+
         if modes.contains(GizmoMode::ScaleX) {
             self.subgizmos.push(
                 ScaleSubGizmo::new(
@@ -683,6 +701,12 @@ pub enum GizmoResult {
     Scale {
         /// Total scale of the gizmo interaction
         total: mint::Vector3<f64>,
+    },
+    ResizeFace {
+        /// The explicitly picked face of a generic oriented bounds gizmo.
+        face: BoundsFace,
+        /// Total signed displacement along the face's outward local normal.
+        delta: f64,
     },
     Arcball {
         /// The latest rotation delta

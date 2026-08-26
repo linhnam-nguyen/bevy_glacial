@@ -217,6 +217,14 @@ impl GizmoTarget {
     }
 }
 
+/// Marks a [`GizmoTarget`] as a generic oriented bounds handle.
+///
+/// Bounds targets expose six explicit face handles. Face drags report a
+/// [`GizmoResult::ResizeFace`] and are not applied to the target's ordinary
+/// transform by the Bevy adapter; the host owns the bounds semantics.
+#[derive(Component, Copy, Clone, Debug, Default)]
+pub struct BoundsGizmoTarget;
+
 /// Marker used to specify which camera to use for gizmos.
 #[derive(Component)]
 pub struct GizmoCamera;
@@ -354,7 +362,15 @@ pub struct GizmoDragging;
 fn update_gizmos(
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_gizmo_camera: Query<(&Camera, &GlobalTransform), With<GizmoCamera>>,
-    mut q_targets: Query<(Entity, &mut Transform, &mut GizmoTarget), Without<GizmoCamera>>,
+    mut q_targets: Query<
+        (
+            Entity,
+            &mut Transform,
+            &mut GizmoTarget,
+            Option<&BoundsGizmoTarget>,
+        ),
+        Without<GizmoCamera>,
+    >,
     mut drag_started: MessageReader<GizmoDragStarted>,
     mut dragging: MessageReader<GizmoDragging>,
     gizmo_options: Res<GizmoOptions>,
@@ -439,6 +455,8 @@ fn update_gizmos(
         snap_distance,
         snap_scale,
         pixels_per_point: scale_factor,
+        bounds_faces: false,
+        bounds_min_thickness: core::DEFAULT_BOUNDS_MIN_THICKNESS,
     };
 
     let any_gizmo_hovered = q_targets
@@ -456,10 +474,14 @@ fn update_gizmos(
 
     let mut target_entities: Vec<Entity> = vec![];
     let mut target_transforms: Vec<Transform> = vec![];
+    let mut bounds_face_target_count = 0;
 
-    for (entity, mut target_transform, mut gizmo_target) in &mut q_targets {
+    for (entity, mut target_transform, mut gizmo_target, bounds_target) in &mut q_targets {
         target_entities.push(entity);
         target_transforms.push(*target_transform);
+        if bounds_target.is_some() {
+            bounds_face_target_count += 1;
+        }
 
         if gizmo_options.group_targets {
             gizmo_storage
@@ -479,7 +501,9 @@ fn update_gizmos(
         }
 
         let gizmo = gizmo_storage.gizmos.entry(gizmo_uuid).or_default();
-        gizmo.update_config(gizmo_config);
+        let mut target_config = gizmo_config;
+        target_config.bounds_faces = bounds_target.is_some();
+        gizmo.update_config(target_config);
 
         let gizmo_result = gizmo.update(
             gizmo_interaction,
@@ -501,9 +525,11 @@ fn update_gizmos(
                 continue;
             };
 
-            target_transform.translation = DVec3::from(result_transform.translation).as_vec3();
-            target_transform.rotation = DQuat::from(result_transform.rotation).as_quat();
-            target_transform.scale = DVec3::from(result_transform.scale).as_vec3();
+            if bounds_target.is_none() {
+                target_transform.translation = DVec3::from(result_transform.translation).as_vec3();
+                target_transform.rotation = DQuat::from(result_transform.rotation).as_quat();
+                target_transform.scale = DVec3::from(result_transform.scale).as_vec3();
+            }
         }
 
         gizmo_target.latest_result = gizmo_result.map(|(result, _)| result);
@@ -511,7 +537,11 @@ fn update_gizmos(
 
     if gizmo_options.group_targets {
         let gizmo = gizmo_storage.gizmos.entry(GIZMO_GROUP_UUID).or_default();
-        gizmo.update_config(gizmo_config);
+        let bounds_faces =
+            !target_transforms.is_empty() && bounds_face_target_count == target_transforms.len();
+        let mut group_config = gizmo_config;
+        group_config.bounds_faces = bounds_faces;
+        gizmo.update_config(group_config);
 
         let gizmo_result = gizmo.update(
             gizmo_interaction,
@@ -528,7 +558,8 @@ fn update_gizmos(
 
         let is_focused = gizmo.is_focused();
 
-        for (i, (_, mut target_transform, mut gizmo_target)) in q_targets.iter_mut().enumerate() {
+        for (i, (_, mut target_transform, mut gizmo_target, _)) in q_targets.iter_mut().enumerate()
+        {
             gizmo_target.is_active = gizmo_result.is_some();
             gizmo_target.is_focused = is_focused;
 
@@ -538,9 +569,12 @@ fn update_gizmos(
                     continue;
                 };
 
-                target_transform.translation = DVec3::from(result_transform.translation).as_vec3();
-                target_transform.rotation = DQuat::from(result_transform.rotation).as_quat();
-                target_transform.scale = DVec3::from(result_transform.scale).as_vec3();
+                if !bounds_faces {
+                    target_transform.translation =
+                        DVec3::from(result_transform.translation).as_vec3();
+                    target_transform.rotation = DQuat::from(result_transform.rotation).as_quat();
+                    target_transform.scale = DVec3::from(result_transform.scale).as_vec3();
+                }
             }
 
             gizmo_target.latest_result = gizmo_result.as_ref().map(|(result, _)| *result);

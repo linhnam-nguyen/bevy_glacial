@@ -12,10 +12,12 @@
 mod shape;
 mod subgizmo;
 
+pub mod bounds;
 pub mod config;
 pub mod gizmo;
 pub mod math;
 
+pub use bounds::{BoundsFace, DEFAULT_BOUNDS_MIN_THICKNESS, resize_transform_face};
 pub use config::{GizmoConfig, GizmoDirection, GizmoMode, GizmoOrientation, GizmoVisuals};
 pub use gizmo::{Gizmo, GizmoDrawData, GizmoInteraction, GizmoResult};
 

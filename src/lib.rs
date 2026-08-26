@@ -100,8 +100,9 @@ pub use selection_ring::{
 pub use window_settings::{WindowGeometry, WindowSettingsPlugin};
 
 pub use gizmo::{
-    EnumSet, GizmoAutoScale, GizmoCamera, GizmoHotkeys, GizmoMode, GizmoOptions, GizmoOrientation,
-    GizmoTarget, GizmoVisuals, TransformGizmoPlugin, auto_scale_gizmo_to_target,
+    BoundsFace, BoundsGizmoTarget, DEFAULT_BOUNDS_MIN_THICKNESS, EnumSet, GizmoAutoScale,
+    GizmoCamera, GizmoHotkeys, GizmoMode, GizmoOptions, GizmoOrientation, GizmoTarget,
+    GizmoVisuals, TransformGizmoPlugin, auto_scale_gizmo_to_target, resize_transform_face,
 };
 
 use bevy::app::{PluginGroup, PluginGroupBuilder};

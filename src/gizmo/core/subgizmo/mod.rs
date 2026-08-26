@@ -8,11 +8,13 @@ use enum_dispatch::enum_dispatch;
 use super::{GizmoDrawData, GizmoResult, config::PreparedGizmoConfig, gizmo::Ray};
 
 pub(crate) use arcball::ArcballSubGizmo;
+pub(crate) use bounds_face::{BoundsFaceParams, BoundsFaceSubGizmo};
 pub(crate) use rotation::RotationSubGizmo;
 pub(crate) use scale::ScaleSubGizmo;
 pub(crate) use translation::TranslationSubGizmo;
 
 pub(crate) mod arcball;
+pub(crate) mod bounds_face;
 pub(crate) mod common;
 pub(crate) mod rotation;
 pub(crate) mod scale;
@@ -25,6 +27,7 @@ pub(crate) enum SubGizmo {
     Rotate(RotationSubGizmo),
     Translate(TranslationSubGizmo),
     Scale(ScaleSubGizmo),
+    BoundsFace(BoundsFaceSubGizmo),
     Arcball(ArcballSubGizmo),
 }
 

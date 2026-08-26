@@ -33,6 +33,7 @@ pub use crate::{
 
 // Vendored transform-gizmo passthrough.
 pub use crate::gizmo::{
-    EnumSet, GizmoAutoScale, GizmoCamera, GizmoHotkeys, GizmoMode, GizmoOptions, GizmoOrientation,
-    GizmoTarget, GizmoVisuals, TransformGizmoPlugin, auto_scale_gizmo_to_target,
+    BoundsFace, BoundsGizmoTarget, DEFAULT_BOUNDS_MIN_THICKNESS, EnumSet, GizmoAutoScale,
+    GizmoCamera, GizmoHotkeys, GizmoMode, GizmoOptions, GizmoOrientation, GizmoTarget,
+    GizmoVisuals, TransformGizmoPlugin, auto_scale_gizmo_to_target, resize_transform_face,
 };

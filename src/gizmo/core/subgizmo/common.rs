@@ -1,4 +1,5 @@
 use super::super::GizmoMode;
+use super::super::bounds::BoundsFace;
 use super::super::math::{ray_to_plane_origin, segment_to_segment};
 use ecolor::Color32;
 use enumset::EnumSet;
@@ -168,6 +169,100 @@ pub(crate) fn pick_circle(
         subgizmo_point: hit_pos,
         picked,
         t,
+    }
+}
+
+pub(crate) fn pick_bounds_face(
+    config: &PreparedGizmoConfig,
+    ray: Ray,
+    face: BoundsFace,
+) -> PickResult {
+    let center = bounds_face_center(config, face);
+    let normal = bounds_face_normal(config, face);
+    let (t, _) = ray_to_plane_origin(normal, center, ray.origin, ray.direction);
+    let hit = ray.origin + ray.direction * t;
+    let local_hit = config.rotation.inverse() * (hit - config.translation);
+    let local_center = face.local_axis() * (face.sign() * face_extent(config, face));
+    let (bitangent, tangent) = bounds_face_basis(face);
+    let local_delta = local_hit - local_center;
+    let handle_half_size = bounds_face_handle_size(config) * 0.5;
+    let within_handle = local_delta.dot(bitangent).abs() <= handle_half_size
+        && local_delta.dot(tangent).abs() <= handle_half_size;
+
+    PickResult {
+        subgizmo_point: hit,
+        picked: within_handle && plane_visibility(config, face_direction(face)) > 0.0,
+        t,
+    }
+}
+
+pub(crate) fn draw_bounds_face(
+    config: &PreparedGizmoConfig,
+    face: BoundsFace,
+    focused: bool,
+) -> GizmoDrawData {
+    let opacity = plane_visibility(config, face_direction(face));
+    if opacity <= 1e-4 {
+        return GizmoDrawData::default();
+    }
+
+    let color = gizmo_color(config, focused, face_direction(face)).gamma_multiply(opacity as _);
+    let transform = DMat4::from_rotation_translation(config.rotation, config.translation);
+    let shape_builder = ShapeBuilder::new(
+        config.view_projection * transform,
+        config.viewport,
+        config.pixels_per_point,
+    );
+    let center = face.local_axis() * (face.sign() * face_extent(config, face));
+    let (bitangent, tangent) = bounds_face_basis(face);
+    let half_size = bounds_face_handle_size(config) * 0.5;
+
+    GizmoDrawData::default().add(
+        shape_builder
+            .polygon(
+                &[
+                    center - bitangent * half_size - tangent * half_size,
+                    center + bitangent * half_size - tangent * half_size,
+                    center + bitangent * half_size + tangent * half_size,
+                    center - bitangent * half_size + tangent * half_size,
+                ],
+                color,
+                (config.visuals.stroke_width, color),
+            )
+            .into(),
+    )
+}
+
+pub(crate) fn bounds_face_center(config: &PreparedGizmoConfig, face: BoundsFace) -> DVec3 {
+    config.translation + bounds_face_normal(config, face) * face_extent(config, face)
+}
+
+pub(crate) fn bounds_face_normal(config: &PreparedGizmoConfig, face: BoundsFace) -> DVec3 {
+    config.rotation * (face.local_axis() * face.sign())
+}
+
+fn face_extent(config: &PreparedGizmoConfig, face: BoundsFace) -> f64 {
+    config.scale[face.axis_index()].abs() * 0.5
+}
+
+fn bounds_face_basis(face: BoundsFace) -> (DVec3, DVec3) {
+    match face.axis_index() {
+        0 => (DVec3::Y, DVec3::Z),
+        1 => (DVec3::Z, DVec3::X),
+        _ => (DVec3::X, DVec3::Y),
+    }
+}
+
+fn bounds_face_handle_size(config: &PreparedGizmoConfig) -> f64 {
+    (config.scale_factor * (config.visuals.gizmo_size * 0.12 + config.visuals.stroke_width * 4.0))
+        as f64
+}
+
+fn face_direction(face: BoundsFace) -> GizmoDirection {
+    match face.axis_index() {
+        0 => GizmoDirection::X,
+        1 => GizmoDirection::Y,
+        _ => GizmoDirection::Z,
     }
 }
 

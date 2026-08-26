@@ -5,6 +5,7 @@ pub use ecolor::Color32;
 use emath::Rect;
 use enumset::{EnumSet, EnumSetType, enum_set};
 
+use super::bounds::DEFAULT_BOUNDS_MIN_THICKNESS;
 use super::math::{
     DMat4, DQuat, DVec3, DVec4, Transform, Vec4Swizzles, screen_to_world, world_to_screen,
 };
@@ -48,6 +49,10 @@ pub struct GizmoConfig {
     pub visuals: GizmoVisuals,
     /// Ratio of window's physical size to logical size.
     pub pixels_per_point: f32,
+    /// Enables six local-space face handles for generic oriented bounds.
+    pub bounds_faces: bool,
+    /// Minimum dimension retained when a bounds face is contracted.
+    pub bounds_min_thickness: f64,
 }
 
 impl Default for GizmoConfig {
@@ -66,6 +71,8 @@ impl Default for GizmoConfig {
             snap_scale: DEFAULT_SNAP_SCALE,
             visuals: GizmoVisuals::default(),
             pixels_per_point: 1.0,
+            bounds_faces: false,
+            bounds_min_thickness: DEFAULT_BOUNDS_MIN_THICKNESS,
         }
     }
 }
@@ -100,6 +107,7 @@ impl GizmoConfig {
     pub(crate) fn modes_changed(&self, other: &Self) -> bool {
         (self.modes != other.modes && self.mode_override.is_none())
             || (self.mode_override != other.mode_override)
+            || (self.bounds_faces != other.bounds_faces)
     }
 }
 
