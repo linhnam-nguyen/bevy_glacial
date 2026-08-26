@@ -22,7 +22,7 @@ use bevy::camera::primitives::Aabb;
 use bevy::camera::{Camera, Projection};
 use bevy::ecs::prelude::*;
 use bevy::input::prelude::*;
-use bevy::math::{DQuat, DVec3, Vec2};
+use bevy::math::Vec2;
 use bevy::picking::hover::HoverMap;
 use bevy::platform::collections::HashMap;
 use bevy::transform::prelude::*;
@@ -32,6 +32,7 @@ use uuid::Uuid;
 use mouse_interact::MouseGizmoInteractionPlugin;
 use picking::TransformGizmoPickingPlugin;
 use render::{DrawDataHandles, TransformGizmoRenderPlugin};
+use target_transform::apply_result_transform;
 
 use core::config::{
     DEFAULT_SNAP_ANGLE, DEFAULT_SNAP_DISTANCE, DEFAULT_SNAP_SCALE, GizmoModeKind,
@@ -48,6 +49,7 @@ pub mod mouse_interact;
 pub mod picking;
 
 mod render;
+mod target_transform;
 
 const GIZMO_GROUP_UUID: Uuid = Uuid::from_u128(0x_1c90_3d44_0152_45e1_b1c9_889a_0203_e90c);
 
@@ -221,7 +223,8 @@ impl GizmoTarget {
 ///
 /// Bounds targets expose six explicit face handles. Face drags report a
 /// [`GizmoResult::ResizeFace`] and are not applied to the target's ordinary
-/// transform by the Bevy adapter; the host owns the bounds semantics.
+/// transform by the Bevy adapter; the host owns the bounds semantics. Other
+/// gizmo results continue to update the target transform normally.
 #[derive(Component, Copy, Clone, Debug, Default)]
 pub struct BoundsGizmoTarget;
 
@@ -519,17 +522,13 @@ fn update_gizmos(
         gizmo_target.is_active = gizmo_result.is_some();
         gizmo_target.is_focused = is_focused;
 
-        if let Some((_, updated_targets)) = &gizmo_result {
+        if let Some((result, updated_targets)) = &gizmo_result {
             let Some(result_transform) = updated_targets.first() else {
                 bevy::log::warn!("No transform found in GizmoResult!");
                 continue;
             };
 
-            if bounds_target.is_none() {
-                target_transform.translation = DVec3::from(result_transform.translation).as_vec3();
-                target_transform.rotation = DQuat::from(result_transform.rotation).as_quat();
-                target_transform.scale = DVec3::from(result_transform.scale).as_vec3();
-            }
+            apply_result_transform(&mut target_transform, *result, *result_transform);
         }
 
         gizmo_target.latest_result = gizmo_result.map(|(result, _)| result);
@@ -563,18 +562,13 @@ fn update_gizmos(
             gizmo_target.is_active = gizmo_result.is_some();
             gizmo_target.is_focused = is_focused;
 
-            if let Some((_, updated_targets)) = &gizmo_result {
+            if let Some((result, updated_targets)) = &gizmo_result {
                 let Some(result_transform) = updated_targets.get(i) else {
                     bevy::log::warn!("No transform {i} found in GizmoResult!");
                     continue;
                 };
 
-                if !bounds_faces {
-                    target_transform.translation =
-                        DVec3::from(result_transform.translation).as_vec3();
-                    target_transform.rotation = DQuat::from(result_transform.rotation).as_quat();
-                    target_transform.scale = DVec3::from(result_transform.scale).as_vec3();
-                }
+                apply_result_transform(&mut target_transform, *result, *result_transform);
             }
 
             gizmo_target.latest_result = gizmo_result.as_ref().map(|(result, _)| *result);
