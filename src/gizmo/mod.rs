@@ -87,6 +87,9 @@ pub struct GizmoOptions {
     pub pivot_point: TransformPivotPoint,
     /// Look and feel of the gizmo.
     pub visuals: GizmoVisuals,
+    /// Multiplier for the generic gizmo and Section Box face handles.
+    /// `1.0` preserves the default size.
+    pub gizmo_size_scale: f32,
     /// Whether snapping is enabled in the gizmo transformations.
     /// This may be overwritten with hotkeys ([`GizmoHotkeys::enable_snapping`]).
     pub snapping: bool,
@@ -121,6 +124,7 @@ impl Default for GizmoOptions {
             gizmo_orientation: GizmoOrientation::default(),
             pivot_point: TransformPivotPoint::default(),
             visuals: Default::default(),
+            gizmo_size_scale: 1.0,
             snapping: false,
             accurate_mode: false,
             snap_angle: DEFAULT_SNAP_ANGLE,
@@ -453,6 +457,7 @@ fn update_gizmos(
         orientation: gizmo_options.gizmo_orientation,
         pivot_point: gizmo_options.pivot_point,
         visuals: gizmo_options.visuals,
+        gizmo_size_scale: gizmo_options.gizmo_size_scale,
         snapping: gizmo_options.snapping,
         snap_angle,
         snap_distance,
@@ -700,8 +705,9 @@ pub fn auto_scale_gizmo_to_target(
         return;
     }
 
-    options.visuals.gizmo_size = (max_screen_radius * settings.object_fraction)
-        .clamp(settings.min_pixels, settings.max_pixels);
+    options.visuals.gizmo_size =
+        (max_screen_radius * settings.object_fraction * options.gizmo_size_scale.max(0.01))
+            .clamp(settings.min_pixels, settings.max_pixels);
 }
 
 fn cleanup_old_data(

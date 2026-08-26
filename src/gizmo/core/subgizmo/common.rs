@@ -261,7 +261,7 @@ fn bounds_face_basis(face: BoundsFace) -> (DVec3, DVec3) {
 /// narrowest local dimension keeps the handle usable while preserving a
 /// stable 3D size as the box rotates.
 pub(crate) fn bounds_face_handle_size(config: &PreparedGizmoConfig) -> f64 {
-    config.scale.abs().min_element() * 0.06
+    config.scale.abs().min_element() * 0.06 * config.gizmo_size_scale.max(0.01) as f64
 }
 
 fn face_direction(face: BoundsFace) -> GizmoDirection {

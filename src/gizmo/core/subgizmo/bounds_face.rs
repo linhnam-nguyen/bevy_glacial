@@ -86,10 +86,11 @@ mod tests {
 
         let initial_size = bounds_face_handle_size(&config);
 
+        config.gizmo_size_scale = 2.5;
         config.scale_factor = 4.0;
         config.rotation = DQuat::from_rotation_y(0.8);
 
-        assert_eq!(bounds_face_handle_size(&config), initial_size);
+        assert_eq!(bounds_face_handle_size(&config), initial_size * 2.5);
         assert_eq!(initial_size, 1.2);
     }
 }

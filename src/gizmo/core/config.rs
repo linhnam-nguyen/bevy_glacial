@@ -47,6 +47,8 @@ pub struct GizmoConfig {
     pub snap_scale: f32,
     /// Visual settings for the gizmo, affecting appearance and visibility.
     pub visuals: GizmoVisuals,
+    /// Multiplier for the generic gizmo and bounds-face handle sizes.
+    pub(crate) gizmo_size_scale: f32,
     /// Ratio of window's physical size to logical size.
     pub pixels_per_point: f32,
     /// Enables six local-space face handles for generic oriented bounds.
@@ -70,6 +72,7 @@ impl Default for GizmoConfig {
             snap_distance: DEFAULT_SNAP_DISTANCE,
             snap_scale: DEFAULT_SNAP_SCALE,
             visuals: GizmoVisuals::default(),
+            gizmo_size_scale: 1.0,
             pixels_per_point: 1.0,
             bounds_faces: false,
             bounds_min_thickness: DEFAULT_BOUNDS_MIN_THICKNESS,
