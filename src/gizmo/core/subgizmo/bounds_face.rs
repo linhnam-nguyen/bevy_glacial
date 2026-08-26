@@ -69,3 +69,27 @@ impl SubGizmoKind for BoundsFaceGizmo {
         draw_bounds_face(&subgizmo.config, subgizmo.face, subgizmo.focused)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use glam::{DQuat, DVec3};
+
+    use super::super::super::config::PreparedGizmoConfig;
+    use super::super::common::bounds_face_handle_size;
+
+    #[test]
+    fn face_handle_size_is_world_space_and_rotation_independent() {
+        let mut config = PreparedGizmoConfig::default();
+        config.scale = DVec3::new(20.0, 40.0, 60.0);
+        config.scale_factor = 0.25;
+        config.rotation = DQuat::IDENTITY;
+
+        let initial_size = bounds_face_handle_size(&config);
+
+        config.scale_factor = 4.0;
+        config.rotation = DQuat::from_rotation_y(0.8);
+
+        assert_eq!(bounds_face_handle_size(&config), initial_size);
+        assert_eq!(initial_size, 1.2);
+    }
+}
